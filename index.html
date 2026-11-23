@@ -155,8 +155,60 @@
     .locked-banner p{max-width:390px;margin:0 auto 18px}
     .portal-note{font-size:10px;color:#a1a6b5;text-align:center;margin-top:15px;line-height:1.5}
     .hidden{display:none!important}
+    html,body{max-width:100%;overflow-x:hidden}
+    main,.card,.event-sidebar,.editor,.participant-wrap,.participant-grid,.certificate-preview,.claim-card,.gate-card{min-width:0}
+    .topbar{gap:12px}
+    .brand{min-width:0}
+    .brand>span{white-space:nowrap}
+    img,canvas,table{max-width:100%}
+    .radio-choice span,.btn,.toggle-row{touch-action:manipulation}
     @media(max-width:850px){.studio-grid{grid-template-columns:220px minmax(0,1fr)}.design-grid{grid-template-columns:1fr}.design-controls{grid-template-columns:1fr 1fr}.design-controls .design-control:first-child{grid-column:1/-1}.participant-grid{grid-template-columns:1fr}.event-sidebar{top:84px}}
     @media(max-width:620px){.topbar{height:63px;padding:0 14px}.brand{font-size:15px}.brand-mark{width:32px;height:32px}.user-chip span{display:none}main{padding-top:25px}.heading-row{align-items:flex-start;flex-direction:column;margin-bottom:18px}.heading-row .btn{align-self:flex-start}.studio-grid{grid-template-columns:1fr;gap:13px}.event-sidebar{position:static;padding:13px}.event-list{display:flex;overflow:auto;gap:5px}.event-item{min-width:185px;width:auto;margin:0}.event-item strong{max-width:130px}.side-add{width:auto;margin:8px 0 0}.fields{grid-template-columns:1fr}.field.full{grid-column:auto}.card-pad{padding:16px}.design-controls{grid-template-columns:1fr 1fr}.stats{gap:7px}.stat{padding:12px}.stat strong{font-size:18px}.share-panel{flex-wrap:wrap}.share-panel input{width:100%}.share-panel .btn{flex:1}.steps{margin:22px 0 18px}.step{font-size:9px}.step-number{width:29px;height:29px}.steps:before{top:14px}.event-banner{padding:15px}.certificate-preview{padding:12px}.gate-card,.claim-card{padding:16px}.certificate-actions{flex-direction:column}.participant-wrap h1{font-size:25px}}
+    @media(max-width:480px){
+      .topbar{padding:0 12px}
+      .brand{gap:8px}
+      .brand-mark{width:30px;height:30px;border-radius:9px}
+      .brand>span{font-size:14px}
+      .user-chip{gap:0}
+      .avatar{width:29px;height:29px}
+      main{padding:21px 12px 44px}
+      h1{font-size:23px}
+      .heading-row{margin-bottom:15px}
+      .heading-row .btn{width:100%}
+      .card-head{gap:8px}
+      .card-head>div{min-width:0}
+      .card-head .preview-chip{flex-shrink:0}
+      .event-list{padding-bottom:2px}
+      .event-item{min-width:172px}
+      .fields,.mini-fields,.design-controls{grid-template-columns:minmax(0,1fr)}
+      .design-controls .design-control:first-child{grid-column:auto}
+      .link-row,.code-form{grid-template-columns:minmax(0,1fr)}
+      .link-row .btn,.code-form .btn{width:100%}
+      .radio-group{display:grid;grid-template-columns:1fr}
+      .radio-choice span{width:100%;justify-content:center}
+      .gate-settings{padding:12px}
+      .template-drop{align-items:flex-start}
+      .canvas-hint{align-items:flex-start;flex-direction:column}
+      .color-row{flex-wrap:wrap}
+      .share-panel .btn{width:100%}
+      .stats{grid-template-columns:1fr}
+      .stat{display:flex;align-items:center;justify-content:space-between}
+      .stat strong{margin:0}
+      .steps{margin-left:-2px;margin-right:-2px}
+      .step{padding:0 3px;font-size:8px}
+      .step-number{width:27px;height:27px}
+      .steps:before{top:13px;left:16.5%;right:16.5%}
+      .event-banner{align-items:flex-start}
+      .event-banner h2{font-size:15px}
+      .event-banner p{line-height:1.55}
+      .gate-state{padding:12px}
+      .locked-banner{padding:38px 16px}
+      .locked-banner h2{font-size:17px}
+      .certificate-caption{align-items:flex-start}
+      .certificate-actions .btn{width:100%}
+      .table-wrap{margin:0 -5px}
+      .portal-note{padding:0 4px}
+    }
   </style>
 </head>
 <body>
