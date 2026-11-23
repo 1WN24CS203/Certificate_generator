@@ -1,0 +1,670 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f7fb">
+  <meta name="description" content="A universal event survey and certificate portal for organizers and participants.">
+  <title>Gatherwell — Event Certificate Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root{--ink:#1e2540;--muted:#7b8299;--line:#e9eaf1;--paper:#fff;--bg:#f6f7fb;--accent:#6658e8;--accent-soft:#f0efff;--green:#299a71}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:14px}
+    button,input,select{font:inherit}
+    button{cursor:pointer}
+    .topbar{height:72px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 clamp(16px,4vw,56px);position:sticky;top:0;z-index:10}
+    .brand{display:flex;align-items:center;gap:11px;font-size:17px;font-weight:750;letter-spacing:-.4px}
+    .brand-mark{width:35px;height:35px;border-radius:12px;background:var(--accent);display:grid;place-items:center;color:white;box-shadow:0 6px 15px #6658e833}
+    .brand-mark svg{width:19px;height:19px}
+    .user-chip{display:flex;align-items:center;gap:9px;color:#717990;font-size:12px}
+    .avatar{width:31px;height:31px;border-radius:50%;background:#ebe9ff;color:var(--accent);display:grid;place-items:center;font-weight:700}
+    main{max-width:1280px;margin:0 auto;padding:34px clamp(16px,4vw,42px) 68px}
+    .eyebrow{font-size:10px;font-weight:750;letter-spacing:1.55px;text-transform:uppercase;color:var(--accent)}
+    h1{font-size:28px;line-height:1.18;letter-spacing:-1px;margin:8px 0 7px;font-weight:750}
+    h2{font-size:15px;letter-spacing:-.2px;margin:0;font-weight:730}
+    h3{font-size:13px;font-weight:700;margin:0}
+    .subtle{color:var(--muted);font-size:12px;line-height:1.65}
+    .heading-row{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:25px}
+    .btn{border:1px solid #e4e5ed;background:#fff;color:#505873;padding:10px 14px;border-radius:9px;font-size:12px;font-weight:650;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:.18s;white-space:nowrap}
+    .btn:hover{border-color:#c8c8d8;background:#fafaff;transform:translateY(-1px)}
+    .btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 5px 12px #6658e825}
+    .btn-primary:hover{background:#584bd3;border-color:#584bd3;color:white}
+    .btn-quiet{border-color:transparent;background:transparent}
+    .btn-danger{color:#c54554}
+    .btn:disabled{opacity:.47;cursor:not-allowed;transform:none}
+    .card{background:var(--paper);border:1px solid var(--line);border-radius:14px;box-shadow:0 2px 6px #22294a05}
+    .card-pad{padding:21px}
+    .studio-grid{display:grid;grid-template-columns:275px minmax(0,1fr);gap:20px;align-items:start}
+    .event-sidebar{padding:17px;position:sticky;top:91px}
+    .section-label{font-size:10px;font-weight:750;letter-spacing:1.1px;color:#9298aa;text-transform:uppercase;margin:2px 0 13px}
+    .event-item{width:100%;display:flex;align-items:center;gap:11px;padding:11px;border:1px solid transparent;background:transparent;text-align:left;border-radius:10px;color:var(--ink);margin:3px 0}
+    .event-item:hover{background:#fafaff}
+    .event-item.active{background:#f4f3ff;border-color:#eceaff}
+    .event-dot{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:white;font-size:13px;font-weight:700;flex:0 0 auto}
+    .event-item strong{display:block;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:165px}
+    .event-item small{display:block;color:#9298aa;font-size:10px;margin-top:3px}
+    .side-add{width:100%;justify-content:flex-start;color:var(--accent);margin-top:8px;border-style:dashed}
+    .editor{display:grid;gap:17px;min-width:0}
+    .card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:19px}
+    .card-head .subtle{margin-top:4px}
+    .fields{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .field{display:grid;gap:6px;min-width:0}
+    .field.full{grid-column:1/-1}
+    label{font-size:11px;font-weight:650;color:#626982}
+    input[type=text],input[type=email],input[type=url],input[type=number],input[type=date],input[type=password],select{width:100%;min-width:0;border:1px solid #e5e6ee;border-radius:8px;padding:10px 11px;background:#fff;color:var(--ink);outline:none;transition:.15s}
+    input:focus,select:focus{border-color:#a9a0ff;box-shadow:0 0 0 3px #6658e812}
+    input::placeholder{color:#b0b4c2}
+    .input-note{font-size:10px;color:#9a9fb0;line-height:1.5}
+    .accent-input{height:39px;width:52px;padding:3px;border:1px solid var(--line);border-radius:8px;background:#fff}
+    .color-row{display:flex;align-items:center;gap:9px}
+    .field-inline{display:grid;grid-template-columns:1fr auto;gap:7px;align-items:center}
+    .hr{height:1px;background:#f0f0f5;margin:18px 0}
+    .template-drop{min-height:77px;border:1px dashed #d8d9e5;background:#fbfbfe;border-radius:10px;display:flex;align-items:center;gap:12px;padding:12px;cursor:pointer}
+    .template-drop:hover{border-color:#9c92ff;background:#f9f8ff}
+    .upload-symbol{width:37px;height:37px;border-radius:10px;background:#f0efff;color:var(--accent);display:grid;place-items:center;font-size:17px;flex-shrink:0}
+    .template-drop strong{font-size:11px;display:block}
+    .template-drop small{font-size:10px;color:#969bad;display:block;margin-top:4px}
+    .toggle-row{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:4px 0}
+    .toggle{position:relative;width:35px;height:20px;flex-shrink:0}
+    .toggle input{opacity:0;width:0;height:0}
+    .toggle span{position:absolute;inset:0;background:#d9dbe5;border-radius:20px;transition:.2s}
+    .toggle span:before{content:"";position:absolute;width:14px;height:14px;left:3px;top:3px;border-radius:50%;background:#fff;transition:.2s}
+    .toggle input:checked+span{background:var(--accent)}
+    .toggle input:checked+span:before{transform:translateX(15px)}
+    .link-row{display:flex;gap:8px}
+    .link-row input{min-width:0}
+    .gate-settings{padding:14px;border-radius:10px;background:#fafaff;border:1px solid #efeff8;margin-top:12px}
+    .radio-group{display:flex;flex-wrap:wrap;gap:8px}
+    .radio-choice{position:relative}
+    .radio-choice input{position:absolute;opacity:0}
+    .radio-choice span{display:inline-flex;padding:8px 10px;border:1px solid #e7e7ef;background:#fff;border-radius:8px;font-size:10px;color:#747b91;cursor:pointer}
+    .radio-choice input:checked+span{border-color:#aaa2ff;color:var(--accent);background:#f4f3ff}
+    .design-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(215px,.75fr);gap:18px}
+    .canvas-wrap{background:#f0f1f6;padding:12px;border-radius:11px}
+    canvas#designer{width:100%;height:auto;display:block;border-radius:5px;cursor:crosshair;box-shadow:0 4px 18px #252a4514}
+    .canvas-hint{font-size:10px;color:#979caf;margin-top:9px;display:flex;justify-content:space-between;gap:8px}
+    .design-controls{display:grid;align-content:start;gap:12px}
+    .range-row{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center}
+    input[type=range]{width:100%;accent-color:var(--accent)}
+    output{font-size:10px;color:#9298aa;min-width:30px;text-align:right}
+    .design-control{display:grid;gap:6px}
+    .small-select{padding:8px 9px!important;font-size:11px}
+    .mini-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .mini-fields input[type=number]{padding:8px 9px}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+    .stat{padding:15px 17px}
+    .stat small{color:#9197aa;font-size:10px}
+    .stat strong{font-size:21px;display:block;margin-top:5px;letter-spacing:-.5px}
+    .table-wrap{overflow:auto}
+    table{width:100%;border-collapse:collapse;min-width:700px}
+    th{text-align:left;color:#969bad;text-transform:uppercase;font-size:9px;letter-spacing:.8px;font-weight:700;padding:11px 12px;border-bottom:1px solid #eeeef4}
+    td{padding:12px;font-size:11px;border-bottom:1px solid #f1f1f5;color:#535a72;white-space:nowrap}
+    td:first-child{color:var(--ink);font-weight:650}
+    .id-pill{font-family:ui-monospace,monospace;font-size:10px;color:#6558d9;background:#f2f1ff;border-radius:5px;padding:4px 6px}
+    .empty{text-align:center;padding:30px 12px;color:#989dae;font-size:11px}
+    .share-panel{display:flex;align-items:center;gap:9px;margin-top:13px}
+    .share-panel input{background:#fafaff;font-size:10px}
+    .share-panel .btn{flex-shrink:0}
+    .participant-wrap{max-width:920px;margin:0 auto}
+    .steps{display:grid;grid-template-columns:repeat(3,1fr);margin:25px 0 22px;position:relative}
+    .steps:before{content:"";height:1px;background:#e4e5ed;position:absolute;top:15px;left:16.5%;right:16.5%}
+    .step{position:relative;display:grid;justify-items:center;gap:7px;text-align:center;color:#a1a5b4;font-size:10px}
+    .step-number{width:31px;height:31px;border-radius:50%;background:#fff;border:1px solid #e3e4ed;display:grid;place-items:center;color:#969bad;font-size:11px;font-weight:700;z-index:1}
+    .step.active{color:var(--accent);font-weight:700}
+    .step.active .step-number{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 4px 10px #6658e833}
+    .step.done{color:#2e9b76;font-weight:650}
+    .step.done .step-number{background:#e8f7f0;color:#299a71;border-color:#c5eadb}
+    .participant-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(280px,.95fr);gap:17px;align-items:start}
+    .event-banner{padding:19px 21px;display:flex;gap:14px;align-items:center;margin-bottom:16px}
+    .event-icon{width:43px;height:43px;border-radius:13px;display:grid;place-items:center;color:white;font-size:19px;flex:0 0 auto}
+    .event-banner h2{font-size:16px}
+    .event-banner p{margin:4px 0 0;color:#8b91a4;font-size:11px}
+    .gate-card{padding:21px}
+    .gate-state{padding:14px;border-radius:10px;background:#fffaf0;border:1px solid #f5ead1;display:flex;gap:11px;margin:16px 0}
+    .gate-state.unlocked{background:#effaf5;border-color:#d6f0e2}
+    .gate-state-icon{width:29px;height:29px;border-radius:9px;background:#fff1d2;color:#b78325;display:grid;place-items:center;flex-shrink:0}
+    .gate-state.unlocked .gate-state-icon{background:#dcf4e8;color:#25865f}
+    .gate-state strong{font-size:11px;display:block;margin:1px 0 4px}
+    .gate-state p{margin:0;color:#8d91a0;font-size:10px;line-height:1.55}
+    .survey-actions{display:grid;gap:10px}
+    .survey-open{width:100%;padding:12px}
+    .timer-hint{font-size:10px;color:#9298aa;text-align:center;min-height:15px}
+    .confirm-row{display:flex;align-items:flex-start;gap:9px;font-size:10px;color:#70768b;line-height:1.5}
+    .confirm-row input{accent-color:var(--accent);margin-top:2px}
+    .code-form{display:grid;grid-template-columns:1fr auto;gap:8px}
+    .lock-note{font-size:10px;color:#999eaf;display:flex;align-items:center;gap:6px;margin-top:14px}
+    .certificate-preview{padding:16px}
+    #participant-preview{width:100%;height:auto;border-radius:6px;box-shadow:0 3px 12px #252a4514;display:block}
+    .certificate-caption{display:flex;align-items:center;justify-content:space-between;gap:9px;margin:0 0 12px}
+    .preview-chip{font-size:9px;padding:5px 7px;color:#398264;background:#eaf7f0;border-radius:20px}
+    .claim-card{padding:21px}
+    .claim-form{display:grid;gap:12px}
+    .certificate-actions{display:flex;gap:9px;margin-top:13px;flex-wrap:wrap}
+    .certificate-actions .btn{flex:1}
+    .verification{font-size:10px;color:#888ea1;margin-top:12px;display:flex;align-items:center;gap:6px}
+    .toast-container{position:fixed;right:20px;bottom:20px;z-index:50;display:grid;gap:8px}
+    .toast{background:#222841;color:white;border-radius:10px;padding:12px 16px;box-shadow:0 8px 24px #15192b25;font-size:12px;max-width:min(360px,calc(100vw - 32px));animation:toastIn .2s ease-out}
+    .toast.error{background:#a83d4b}
+    .toast.success{background:#267956}
+    @keyframes toastIn{from{transform:translateY(7px);opacity:0}to{transform:translateY(0);opacity:1}}
+    .locked-banner{text-align:center;padding:50px 24px}
+    .locked-banner .lock-icon{width:54px;height:54px;border-radius:17px;background:#f0efff;color:var(--accent);display:grid;place-items:center;margin:0 auto 15px}
+    .locked-banner h2{font-size:18px;margin-bottom:7px}
+    .locked-banner p{max-width:390px;margin:0 auto 18px}
+    .portal-note{font-size:10px;color:#a1a6b5;text-align:center;margin-top:15px;line-height:1.5}
+    .hidden{display:none!important}
+    @media(max-width:850px){.studio-grid{grid-template-columns:220px minmax(0,1fr)}.design-grid{grid-template-columns:1fr}.design-controls{grid-template-columns:1fr 1fr}.design-controls .design-control:first-child{grid-column:1/-1}.participant-grid{grid-template-columns:1fr}.event-sidebar{top:84px}}
+    @media(max-width:620px){.topbar{height:63px;padding:0 14px}.brand{font-size:15px}.brand-mark{width:32px;height:32px}.user-chip span{display:none}main{padding-top:25px}.heading-row{align-items:flex-start;flex-direction:column;margin-bottom:18px}.heading-row .btn{align-self:flex-start}.studio-grid{grid-template-columns:1fr;gap:13px}.event-sidebar{position:static;padding:13px}.event-list{display:flex;overflow:auto;gap:5px}.event-item{min-width:185px;width:auto;margin:0}.event-item strong{max-width:130px}.side-add{width:auto;margin:8px 0 0}.fields{grid-template-columns:1fr}.field.full{grid-column:auto}.card-pad{padding:16px}.design-controls{grid-template-columns:1fr 1fr}.stats{gap:7px}.stat{padding:12px}.stat strong{font-size:18px}.share-panel{flex-wrap:wrap}.share-panel input{width:100%}.share-panel .btn{flex:1}.steps{margin:22px 0 18px}.step{font-size:9px}.step-number{width:29px;height:29px}.steps:before{top:14px}.event-banner{padding:15px}.certificate-preview{padding:12px}.gate-card,.claim-card{padding:16px}.certificate-actions{flex-direction:column}.participant-wrap h1{font-size:25px}}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 3.8 7.5 12 12l8.2-4.5L12 3Z"/><path d="m3.8 12 8.2 4.5 8.2-4.5M3.8 16.5 12 21l8.2-4.5"/></svg></div>
+      <span>gatherwell<span style="color:#a7a4c4">.</span></span>
+    </div>
+    <div class="user-chip"><span id="portal-role">Organizer workspace</span><div class="avatar" id="portal-avatar">O</div></div>
+  </header>
+  <main id="app"></main>
+  <div class="toast-container" id="toasts" aria-live="polite"></div>
+  <input id="template-file" type="file" accept="image/png,image/jpeg,image/webp" class="hidden">
+  <script>
+  (() => {
+    "use strict";
+    const STORE_KEY = "gatherwell_events_v1";
+    const app = document.getElementById("app");
+    const params = new URLSearchParams(location.search);
+    const lockedParticipant = params.get("mode") === "participant";
+    const mode = lockedParticipant ? "participant" : "studio";
+    let events = [];
+    let selectedId = params.get("event") || "";
+    let gateTimer = null;
+    let remaining = 0;
+    let surveyOpened = false;
+    let surveyConfirmed = false;
+    let codeAccepted = false;
+    let certificateClaim = null;
+    let previewName = "Your name here";
+
+    const makeId = () => "evt_" + Math.random().toString(36).slice(2, 9);
+    const defaults = () => ({
+      id: makeId(), name: "Design Futures Summit", organizer: "Northstar Collective",
+      date: new Date().toISOString().slice(0, 10), accent: "#6658e8", surveyUrl: "",
+      gate: "external", dwell: 15, secret: "", templateData: "", font: "serif",
+      fontSize: 43, bold: true, textColor: "#26304b", x: 50, y: 58, stamp: true,
+      participants: []
+    });
+    const persist = () => {
+      try { localStorage.setItem(STORE_KEY, JSON.stringify(events)); return true; }
+      catch (err) { console.error("Could not save event data to localStorage.", err); toast("Could not save. The uploaded image may exceed your browser's storage limit.", "error"); return false; }
+    };
+    const loadEvents = () => {
+      try {
+        const saved = localStorage.getItem(STORE_KEY);
+        events = saved ? JSON.parse(saved) : [];
+        if (!Array.isArray(events)) throw new Error("Saved event data has an invalid format.");
+      } catch (err) {
+        console.error("Could not load event data.", err);
+        events = [];
+        toast("Saved event data could not be read. Create a new event to continue.", "error");
+      }
+      if (!events.length) {
+        const sample = defaults();
+        events.push(sample);
+        persist();
+      }
+      if (!lockedParticipant && (!selectedId || !events.some(e => e.id === selectedId))) selectedId = events[0]?.id || "";
+    };
+    const current = () => events.find(e => e.id === selectedId) || null;
+    const esc = value => String(value ?? "").replace(/[&<>"']/g, ch => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[ch]));
+    const toast = (message, type = "") => {
+      const el = document.createElement("div");
+      el.className = "toast " + type;
+      el.textContent = message;
+      document.getElementById("toasts").appendChild(el);
+      setTimeout(() => el.remove(), 3500);
+    };
+    const dateLabel = value => {
+      if (!value) return "Date not set";
+      const date = new Date(value + "T12:00:00");
+      return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString(undefined, { month:"short", day:"numeric", year:"numeric" });
+    };
+    const updateEvent = (key, value, redraw = false) => {
+      const e = current();
+      if (!e) return;
+      e[key] = value;
+      persist();
+      if (redraw) {
+        render();
+        return;
+      }
+      if (key === "name" || key === "organizer" || key === "date" || key === "accent") {
+        const name = document.querySelector("[data-live=name]");
+        if (name && key === "name") name.textContent = value || "Untitled event";
+        const org = document.querySelector("[data-live=organizer]");
+        if (org && key === "organizer") org.textContent = value || "Organizer";
+        const icon = document.querySelector(".event-icon");
+        if (icon && key === "accent") icon.style.background = value;
+        const dot = document.querySelector(".event-item.active .event-dot");
+        if (dot && key === "accent") dot.style.background = value;
+      }
+      if (["font","fontSize","bold","textColor","x","y","stamp"].includes(key)) drawDesigner();
+    };
+    const sampleTemplate = (canvas, event) => {
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width, h = canvas.height;
+      ctx.fillStyle = "#fbf8ef"; ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = "#f4efdf"; ctx.fillRect(0, 0, w, h * .085);
+      ctx.fillStyle = "#f4efdf"; ctx.fillRect(0, h * .915, w, h * .085);
+      const pad = Math.min(w, h) * .075;
+      ctx.strokeStyle = event.accent || "#6658e8"; ctx.lineWidth = Math.max(2, w * .004);
+      ctx.strokeRect(pad, pad, w - pad * 2, h - pad * 2);
+      ctx.lineWidth = Math.max(1, w * .0014);
+      ctx.strokeStyle = "#cfbea0";
+      ctx.strokeRect(pad + w * .016, pad + w * .016, w - 2 * (pad + w * .016), h - 2 * (pad + w * .016));
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillStyle = event.accent || "#6658e8";
+      ctx.font = `700 ${Math.round(w * .016)}px ui-sans-serif, system-ui`;
+      ctx.fillText((event.organizer || "YOUR ORGANIZATION").toUpperCase(), w / 2, h * .205);
+      ctx.fillStyle = "#3b4050"; ctx.font = `500 ${Math.round(w * .019)}px Georgia, serif`;
+      ctx.fillText("CERTIFICATE OF", w / 2, h * .32);
+      ctx.fillStyle = event.accent || "#6658e8"; ctx.font = `700 ${Math.round(w * .045)}px Georgia, serif`;
+      ctx.fillText("APPRECIATION", w / 2, h * .395);
+      ctx.fillStyle = "#727586"; ctx.font = `400 ${Math.round(w * .014)}px ui-sans-serif, system-ui`;
+      ctx.fillText("is proudly presented to", w / 2, h * .49);
+      ctx.fillStyle = "#253047"; ctx.font = `italic ${Math.round(w * .033)}px Georgia, serif`;
+      ctx.fillText("Your name here", w / 2, h * .585);
+      ctx.strokeStyle = "#bdb49f"; ctx.lineWidth = Math.max(1, w * .001);
+      ctx.beginPath(); ctx.moveTo(w * .29, h * .625); ctx.lineTo(w * .71, h * .625); ctx.stroke();
+      ctx.fillStyle = "#666b79"; ctx.font = `400 ${Math.round(w * .012)}px ui-sans-serif, system-ui`;
+      ctx.fillText(`for participating in ${event.name || "our event"}`, w / 2, h * .69);
+      ctx.fillText(dateLabel(event.date), w / 2, h * .745);
+      ctx.fillStyle = event.accent || "#6658e8";
+      ctx.beginPath(); ctx.arc(w * .5, h * .845, w * .025, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#fff"; ctx.font = `700 ${Math.round(w * .015)}px Georgia, serif`;
+      ctx.fillText("✦", w / 2, h * .845);
+      ctx.fillStyle = "#747988"; ctx.font = `500 ${Math.round(w * .009)}px ui-sans-serif, system-ui`;
+      ctx.fillText("EVENT ORGANIZER", w * .5, h * .885);
+    };
+    const fontStack = font => ({ sans:"Arial, Helvetica, sans-serif", serif:"Georgia, 'Times New Roman', serif", script:"'Brush Script MT', 'Segoe Script', cursive", mono:"'Courier New', monospace" }[font] || "Georgia, serif");
+    const drawCertificate = (canvas, event, name, verificationId, issuedAt, native = false) => {
+      const ctx = canvas.getContext("2d");
+      const img = event.templateData ? new Image() : null;
+      const finish = () => {
+        const w = canvas.width, h = canvas.height;
+        if (img && img.complete && img.naturalWidth) ctx.drawImage(img, 0, 0, w, h);
+        else sampleTemplate(canvas, event);
+        const scale = native ? w / 1000 : w / 1000;
+        const x = w * Number(event.x || 50) / 100, y = h * Number(event.y || 58) / 100;
+        const size = Math.max(8, Number(event.fontSize || 43) * scale);
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillStyle = event.textColor || "#26304b";
+        ctx.font = `${event.bold ? "700" : "400"} ${size}px ${fontStack(event.font)}`;
+        ctx.shadowColor = "rgba(255,255,255,.25)"; ctx.shadowBlur = native ? 0 : 1;
+        ctx.fillText(name || "Your name here", x, y, w * .82);
+        ctx.shadowBlur = 0;
+        if (event.stamp && verificationId) {
+          const margin = Math.max(14, w * .025);
+          const stampSize = Math.max(8, w * .008);
+          ctx.textAlign = "right"; ctx.textBaseline = "bottom";
+          ctx.fillStyle = event.textColor || "#26304b";
+          ctx.font = `500 ${stampSize}px ${fontStack("sans")}`;
+          ctx.fillText(`VERIFIED  ${verificationId}  ·  ISSUED ${issuedAt}`, w - margin, h - margin, w * .55);
+        }
+      };
+      if (img) {
+        img.onload = finish;
+        img.onerror = () => { console.error("Certificate template image could not be loaded."); sampleTemplate(canvas, event); finishOverlay(); };
+        img.src = event.templateData;
+      } else finish();
+      function finishOverlay() {
+        const w=canvas.width,h=canvas.height,scale=w/1000;
+        ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillStyle=event.textColor||"#26304b";
+        ctx.font=`${event.bold?"700":"400"} ${Math.max(8,Number(event.fontSize||43)*scale)}px ${fontStack(event.font)}`;
+        ctx.fillText(name||"Your name here",w*Number(event.x||50)/100,h*Number(event.y||58)/100,w*.82);
+        if(event.stamp&&verificationId){ctx.textAlign="right";ctx.textBaseline="bottom";ctx.font=`500 ${Math.max(8,w*.008)}px Arial`;ctx.fillText(`VERIFIED  ${verificationId}  ·  ISSUED ${issuedAt}`,w-Math.max(14,w*.025),h-Math.max(14,w*.025),w*.55);}
+      }
+    };
+    const drawDesigner = () => {
+      const event = current(), canvas = document.getElementById("designer");
+      if (!event || !canvas) return;
+      drawCertificate(canvas, event, previewName, "GW-PREVIEW", new Date().toLocaleDateString(), false);
+    };
+    const getParticipantCanvas = (event, name, id, issued) => {
+      const canvas = document.createElement("canvas");
+      if (event.templateData) {
+        const img = new Image();
+        return new Promise((resolve, reject) => {
+          img.onload = () => {
+            canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0);
+            const x=canvas.width*Number(event.x||50)/100,y=canvas.height*Number(event.y||58)/100;
+            ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillStyle=event.textColor||"#26304b";
+            ctx.font=`${event.bold?"700":"400"} ${Math.max(8,Number(event.fontSize||43)*canvas.width/1000)}px ${fontStack(event.font)}`;
+            ctx.fillText(name,x,y,canvas.width*.82);
+            if(event.stamp){ctx.textAlign="right";ctx.textBaseline="bottom";ctx.fillStyle=event.textColor||"#26304b";ctx.font=`500 ${Math.max(8,canvas.width*.008)}px Arial`;const m=Math.max(14,canvas.width*.025);ctx.fillText(`VERIFIED  ${id}  ·  ISSUED ${issued}`,canvas.width-m,canvas.height-m,canvas.width*.55);}
+            resolve(canvas);
+          };
+          img.onerror = () => reject(new Error("The uploaded certificate image could not be opened."));
+          img.src = event.templateData;
+        });
+      }
+      canvas.width=1600;canvas.height=1100;
+      sampleTemplate(canvas,event);
+      const ctx=canvas.getContext("2d"),x=canvas.width*Number(event.x||50)/100,y=canvas.height*Number(event.y||58)/100;
+      ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillStyle=event.textColor||"#26304b";
+      ctx.font=`${event.bold?"700":"400"} ${Math.max(8,Number(event.fontSize||43)*canvas.width/1000)}px ${fontStack(event.font)}`;
+      ctx.fillText(name,x,y,canvas.width*.82);
+      if(event.stamp){ctx.textAlign="right";ctx.textBaseline="bottom";ctx.fillStyle=event.textColor||"#26304b";ctx.font=`500 ${Math.max(8,canvas.width*.008)}px Arial`;const m=Math.max(14,canvas.width*.025);ctx.fillText(`VERIFIED  ${id}  ·  ISSUED ${issued}`,canvas.width-m,canvas.height-m,canvas.width*.55);}
+      return Promise.resolve(canvas);
+    };
+    const renderStudio = () => {
+      const event = current();
+      if (!event) { app.innerHTML = '<div class="card locked-banner"><h2>No event selected</h2><p class="subtle">Create an event to get started.</p><button class="btn btn-primary" id="create-first">＋ Create event</button></div>'; document.getElementById("create-first").onclick=createEvent; return; }
+      const dateOptions = ["external","code","both"];
+      app.innerHTML = `
+        <div class="heading-row">
+          <div><div class="eyebrow">Organizer workspace</div><h1>Your events, all in one place.</h1><div class="subtle">Set up your post-event survey, design a certificate, and keep every claim organized.</div></div>
+          <button class="btn btn-danger" id="delete-event" title="Delete the selected event">⌫&nbsp; Delete event</button>
+        </div>
+        <div class="studio-grid">
+          <aside class="card event-sidebar">
+            <div class="section-label">Your events <span style="float:right">${events.length}</span></div>
+            <div class="event-list">${events.map(e=>`<button class="event-item ${e.id===selectedId?"active":""}" data-select-event="${esc(e.id)}"><span class="event-dot" style="background:${esc(e.accent||"#6658e8")}">${esc((e.name||"E").slice(0,1).toUpperCase())}</span><span><strong>${esc(e.name||"Untitled event")}</strong><small>${esc(dateLabel(e.date))}</small></span></button>`).join("")}</div>
+            <button class="btn side-add" id="add-event">＋&nbsp; Create new event</button>
+            <div class="hr"></div><div class="section-label">Participant link</div>
+            <div class="subtle" style="font-size:10px">Share a direct link that opens this event's participant portal.</div>
+            <div class="share-panel"><input type="text" id="share-url" readonly aria-label="Participant portal link"><button class="btn" id="copy-link">Copy</button></div>
+          </aside>
+          <section class="editor">
+            <div class="card card-pad">
+              <div class="card-head"><div><h2>Event details</h2><div class="subtle">The essentials participants will see.</div></div><span class="preview-chip">●&nbsp; Auto-saved</span></div>
+              <div class="fields">
+                <div class="field"><label for="event-name">Event name</label><input id="event-name" type="text" value="${esc(event.name)}" placeholder="e.g. Design Futures Summit" data-update="name"></div>
+                <div class="field"><label for="event-organizer">Organizing body / club</label><input id="event-organizer" type="text" value="${esc(event.organizer)}" placeholder="e.g. Northstar Collective" data-update="organizer"></div>
+                <div class="field"><label for="event-date">Event date</label><input id="event-date" type="date" value="${esc(event.date)}" data-update="date"></div>
+                <div class="field"><label for="event-accent">Accent theme</label><div class="color-row"><input id="event-accent" class="accent-input" type="color" value="${esc(event.accent)}" data-update="accent"><span class="input-note">Used across your event portal and certificate sample.</span></div></div>
+              </div>
+            </div>
+            <div class="card card-pad">
+              <div class="card-head"><div><h2>Post-event survey</h2><div class="subtle">Add your form and choose how certificate access is verified.</div></div></div>
+              <div class="field"><label for="survey-url">External survey URL</label><div class="link-row"><input id="survey-url" type="url" value="${esc(event.surveyUrl)}" placeholder="https://forms.gle/…"><button class="btn" id="test-link">↗&nbsp; Test link</button></div><div class="input-note">Google Forms, Typeform, Microsoft Forms, or any public survey URL.</div></div>
+              <div class="gate-settings">
+                <div class="field"><label>Participant verification gate</label><div class="radio-group">${dateOptions.map((v,i)=>`<label class="radio-choice"><input type="radio" name="gate" value="${v}" ${event.gate===v?"checked":""}><span>${["Survey + timer","Completion code","Timer + code"][i]}</span></label>`).join("")}</div></div>
+                <div class="fields" style="margin-top:13px">
+                  ${event.gate!=="code"?`<div class="field"><label for="dwell">Survey dwell time (seconds)</label><input id="dwell" type="number" min="0" max="600" value="${esc(event.dwell)}"><div class="input-note">Participants must keep this portal open until the timer ends.</div></div>`:""}
+                  ${event.gate!=="external"?`<div class="field"><label for="secret">Secret completion code</label><input id="secret" type="password" value="${esc(event.secret)}" placeholder="Set a code to share at survey end"><div class="input-note">Share this code only at the end of your survey.</div></div>`:""}
+                  ${event.gate==="external"?`<div class="field"><label>Participant confirmation</label><div class="input-note" style="padding-top:10px">Participants confirm submission after the dwell timer completes.</div></div>`:""}
+                </div>
+              </div>
+              <div class="hr"></div>
+              <div class="card-head" style="margin-bottom:11px"><div><h3>Certificate template</h3><div class="subtle">Upload a signed PNG or JPG, or use the sample template.</div></div><button class="btn" id="use-sample">Use sample</button></div>
+              <div class="template-drop" id="template-drop" role="button" tabindex="0"><div class="upload-symbol">↑</div><div><strong>${event.templateData?"Custom certificate uploaded":"Drop a certificate image here or browse"}</strong><small>${event.templateData?"Image is saved in this browser · click to replace":"PNG, JPEG or WebP · native image resolution is preserved"}</small></div></div>
+            </div>
+            <div class="card card-pad">
+              <div class="card-head"><div><h2>Certificate designer</h2><div class="subtle">Click the preview to position the recipient's name.</div></div><label class="toggle" title="Add verification ID and issue date"><input id="stamp-toggle" type="checkbox" ${event.stamp?"checked":""}><span></span></label></div>
+              <div class="design-grid">
+                <div><div class="canvas-wrap"><canvas id="designer" width="1000" height="688" aria-label="Interactive certificate designer preview"></canvas></div><div class="canvas-hint"><span>Click anywhere to position name</span><span>Preview · ${event.templateData?"uploaded template":"sample template"}</span></div></div>
+                <div class="design-controls">
+                  <div class="design-control"><label for="preview-name">Preview name</label><input id="preview-name" type="text" value="${esc(previewName)}" placeholder="Name preview"></div>
+                  <div class="design-control"><label for="font-family">Font family</label><select class="small-select" id="font-family"><option value="sans" ${event.font==="sans"?"selected":""}>Sans</option><option value="serif" ${event.font==="serif"?"selected":""}>Serif</option><option value="script" ${event.font==="script"?"selected":""}>Script</option><option value="mono" ${event.font==="mono"?"selected":""}>Mono</option></select></div>
+                  <div class="design-control"><label for="font-size">Font size</label><div class="range-row"><input id="font-size" type="range" min="18" max="86" value="${esc(event.fontSize)}"><output id="font-size-out">${esc(event.fontSize)}px</output></div></div>
+                  <div class="design-control"><label for="text-color">Text color</label><div class="color-row"><input id="text-color" class="accent-input" type="color" value="${esc(event.textColor)}"><label for="bold-toggle" style="font-size:10px">Bold</label><label class="toggle"><input id="bold-toggle" type="checkbox" ${event.bold?"checked":""}><span></span></label></div></div>
+                  <div class="design-control"><label>Name position</label><div class="mini-fields"><div class="field"><label for="coord-x">X (%)</label><input id="coord-x" type="number" min="0" max="100" value="${esc(event.x)}"></div><div class="field"><label for="coord-y">Y (%)</label><input id="coord-y" type="number" min="0" max="100" value="${esc(event.y)}"></div></div></div>
+                </div>
+              </div>
+              <div class="input-note" style="margin-top:14px">Toggle the badge to print the unique verification ID and issue date at the bottom of claimed certificates.</div>
+            </div>
+            <div class="card card-pad">
+              <div class="card-head"><div><h2>Participant log</h2><div class="subtle">Every certificate claim for this event.</div></div><button class="btn" id="export-csv" ${event.participants.length?"":"disabled"}>↓&nbsp; Export to CSV</button></div>
+              ${participantTable(event)}
+            </div>
+          </section>
+        </div>`;
+      const share = document.getElementById("share-url");
+      const shareUrl = new URL(location.href); shareUrl.searchParams.set("event", event.id); shareUrl.searchParams.set("mode", "participant");
+      share.value = shareUrl.href;
+      app.querySelectorAll("[data-select-event]").forEach(b=>b.onclick=()=>{selectedId=b.dataset.selectEvent;surveyReset();render();});
+      document.getElementById("add-event").onclick=createEvent;
+      document.getElementById("delete-event").onclick=deleteEvent;
+      document.getElementById("copy-link").onclick=async()=>{try{await navigator.clipboard.writeText(share.value);toast("Participant link copied.","success");}catch(err){share.select();toast("Select and copy the participant link.");}};
+      app.querySelectorAll("[data-update]").forEach(el=>el.addEventListener("input",()=>updateEvent(el.dataset.update,el.value)));
+      document.getElementById("survey-url").addEventListener("change",e=>updateEvent("surveyUrl",e.target.value.trim()));
+      document.getElementById("test-link").onclick=()=>openSurvey(true);
+      app.querySelectorAll('input[name="gate"]').forEach(el=>el.onchange=()=>{updateEvent("gate",el.value,true);});
+      const dwell=document.getElementById("dwell");
+      if(dwell)dwell.onchange=()=>{const n=Number(dwell.value);if(!Number.isFinite(n)||n<0||n>600){toast("Dwell time must be between 0 and 600 seconds.","error");dwell.value=event.dwell;return;}updateEvent("dwell",Math.round(n));};
+      const secret=document.getElementById("secret");
+      if(secret)secret.onchange=()=>updateEvent("secret",secret.value);
+      document.getElementById("use-sample").onclick=()=>{event.templateData="";persist();render();toast("Sample certificate template selected.","success");};
+      const drop=document.getElementById("template-drop");
+      drop.onclick=()=>document.getElementById("template-file").click();
+      drop.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();document.getElementById("template-file").click();}};
+      drop.ondragover=e=>{e.preventDefault();drop.style.borderColor="#9c92ff";drop.style.background="#f9f8ff";};
+      drop.ondragleave=()=>{drop.style.borderColor="";drop.style.background="";};
+      drop.ondrop=e=>{
+        e.preventDefault();drop.style.borderColor="";drop.style.background="";
+        const file=e.dataTransfer?.files?.[0];
+        if(!file)return;
+        const transfer=new DataTransfer();transfer.items.add(file);input.files=transfer.files;
+        input.dispatchEvent(new Event("change",{bubbles:true}));
+      };
+      document.getElementById("stamp-toggle").onchange=e=>updateEvent("stamp",e.target.checked);
+      document.getElementById("preview-name").oninput=e=>{previewName=e.target.value||"Your name here";drawDesigner();};
+      document.getElementById("font-family").onchange=e=>updateEvent("font",e.target.value);
+      document.getElementById("font-size").oninput=e=>{document.getElementById("font-size-out").value=e.target.value+"px";updateEvent("fontSize",Number(e.target.value));};
+      document.getElementById("text-color").oninput=e=>updateEvent("textColor",e.target.value);
+      document.getElementById("bold-toggle").onchange=e=>updateEvent("bold",e.target.checked);
+      ["coord-x","coord-y"].forEach((id,index)=>document.getElementById(id).onchange=e=>{const val=Math.max(0,Math.min(100,Number(e.target.value)||0));e.target.value=val;updateEvent(index?"y":"x",val);});
+      document.getElementById("designer").onclick=e=>{
+        const r=e.currentTarget.getBoundingClientRect();
+        const x=Math.round((e.clientX-r.left)/r.width*100), y=Math.round((e.clientY-r.top)/r.height*100);
+        event.x=x;event.y=y;document.getElementById("coord-x").value=x;document.getElementById("coord-y").value=y;persist();drawDesigner();
+      };
+      document.getElementById("export-csv").onclick=()=>exportCSV(event);
+      drawDesigner();
+    };
+    const participantTable = event => {
+      if (!event.participants?.length) return '<div class="empty">No certificate claims yet. Participant details will appear here after a certificate is generated.</div>';
+      return `<div class="table-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Organization / College</th><th>Verification ID</th><th>Claimed</th></tr></thead><tbody>${event.participants.slice().reverse().map(p=>`<tr><td>${esc(p.name)}</td><td>${esc(p.email)}</td><td>${esc(p.organization)}</td><td><span class="id-pill">${esc(p.id)}</span></td><td>${esc(new Date(p.timestamp).toLocaleString())}</td></tr>`).join("")}</tbody></table></div>`;
+    };
+    const createEvent = () => {
+      const event=defaults();event.name="New event";event.organizer="Your organization";
+      events.unshift(event);selectedId=event.id;persist();surveyReset();render();toast("Your new event is ready to set up.","success");
+      document.getElementById("event-name")?.focus();
+    };
+    const deleteEvent = () => {
+      const event=current();if(!event)return;
+      if(!confirm(`Delete "${event.name}" and its participant log? This cannot be undone.`))return;
+      events=events.filter(e=>e.id!==event.id);selectedId=events[0]?.id||"";
+      if(!events.length){const fresh=defaults();events.push(fresh);selectedId=fresh.id;}
+      persist();surveyReset();render();toast("Event deleted.","success");
+    };
+    const exportCSV = event => {
+      const rows=[["Name","Email","Organization / College","Verification ID","Timestamp"],...(event.participants||[]).map(p=>[p.name,p.email,p.organization,p.id,p.timestamp])];
+      const csv=rows.map(row=>row.map(value=>`"${String(value??"").replace(/"/g,'""')}"`).join(",")).join("\r\n");
+      const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"});
+      const link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download=`${(event.name||"event").replace(/[^a-z0-9]+/gi,"-").toLowerCase()}-participants.csv`;link.click();URL.revokeObjectURL(link.href);
+      toast("Participant CSV exported.","success");
+    };
+    const normalizeUrl = value => {
+      try { const u=new URL(value);return ["http:","https:"].includes(u.protocol)?u.href:null; } catch { return null; }
+    };
+    const openSurvey = test => {
+      const event=current(),url=normalizeUrl(event?.surveyUrl||"");
+      if(!url){toast("Add a valid http or https survey URL first.","error");return;}
+      const opened=window.open(url,"_blank");
+      if(opened)opened.opener=null;
+      if(test){toast(opened?"Survey link opened in a new tab.":"Your browser blocked the survey tab. Check your popup settings.",opened?"success":"error");return;}
+      surveyOpened=true;
+      if(event.gate!=="code"){
+        remaining=Math.max(0,Number(event.dwell)||0);
+        if(gateTimer)clearInterval(gateTimer);
+        updateGateUI();
+        gateTimer=setInterval(()=>{remaining=Math.max(0,remaining-1);updateGateUI();if(remaining===0){clearInterval(gateTimer);gateTimer=null;updateGateUI();}},1000);
+      } else updateGateUI();
+      if(!opened)toast("Survey tab was blocked. Allow popups, then click the survey button again.","error");
+      else toast(event.dwell>0?"Survey opened. Keep this page open while the timer runs.":"Survey opened. Confirm your submission to continue.","success");
+    };
+    const surveyReset = () => {
+      if(gateTimer)clearInterval(gateTimer);
+      gateTimer=null;remaining=0;surveyOpened=false;surveyConfirmed=false;codeAccepted=false;certificateClaim=null;
+    };
+    const gateIsComplete = event => {
+      if(event.gate==="external")return surveyOpened&&remaining===0&&surveyConfirmed;
+      if(event.gate==="code")return codeAccepted;
+      return surveyOpened&&remaining===0&&surveyConfirmed&&codeAccepted;
+    };
+    const updateGateUI = () => {
+      const event=current();
+      if(!event||mode!=="participant")return;
+      const complete=gateIsComplete(event);
+      const timer=document.getElementById("timer-hint");
+      if(timer)timer.textContent=!surveyOpened?"Open the survey to start your verification.":remaining>0?`You can continue in ${remaining} second${remaining===1?"":"s"}…`:"Timer complete — confirm your survey submission.";
+      const confirm=document.getElementById("survey-confirm");
+      if(confirm)confirm.disabled=!surveyOpened||remaining>0;
+      const status=document.getElementById("gate-status");
+      if(status){status.classList.toggle("unlocked",complete);status.querySelector("strong").textContent=complete?"Survey verification complete":"Certificate access is locked";status.querySelector("p").textContent=complete?"Your certificate form is ready.":"Complete the survey verification steps below to unlock your certificate.";}
+      const progress=document.getElementById("step-2");
+      if(progress){progress.classList.toggle("done",complete);progress.classList.toggle("active",!complete);}
+      const third=document.getElementById("step-3");
+      if(third)third.classList.toggle("active",complete);
+      const portal=document.getElementById("claim-area");
+      if(portal){
+        if(complete&&!certificateClaim)portal.innerHTML=claimForm();
+        else if(!complete)portal.innerHTML=lockedForm();
+        bindClaimForm();
+      }
+    };
+    const lockedForm=()=>`<div class="locked-banner"><div class="lock-icon">⌑</div><h2>Your certificate is waiting</h2><p class="subtle">Complete the survey verification step to unlock the certificate form.</p></div>`;
+    const claimForm=()=>`<div class="claim-card"><div class="card-head"><div><h2>Claim your certificate</h2><div class="subtle">Use your full name exactly as it should appear.</div></div></div><form class="claim-form" id="claim-form"><div class="field"><label for="claim-name">Full name</label><input id="claim-name" name="name" type="text" autocomplete="name" placeholder="e.g. Alex Morgan" required minlength="2" maxlength="100"></div><div class="field"><label for="claim-email">Email address</label><input id="claim-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required maxlength="200"></div><div class="field"><label for="claim-org">Institution / organization</label><input id="claim-org" name="organization" type="text" autocomplete="organization" placeholder="e.g. Northstar University" required minlength="2" maxlength="160"></div><button class="btn btn-primary" type="submit">Generate my certificate&nbsp; →</button></form></div>`;
+    const bindClaimForm = () => {
+      const form=document.getElementById("claim-form");
+      if(!form)return;
+      form.onsubmit=async ev=>{
+        ev.preventDefault();
+        const event=current();if(!event||!gateIsComplete(event)){toast("Complete survey verification before claiming your certificate.","error");return;}
+        const fd=new FormData(form),name=String(fd.get("name")||"").trim(),email=String(fd.get("email")||"").trim(),organization=String(fd.get("organization")||"").trim();
+        if(!name||!email||!organization){toast("Please complete all certificate fields.","error");return;}
+        const id="GW-"+new Date().getFullYear()+"-"+crypto.randomUUID().slice(0,8).toUpperCase();
+        const timestamp=new Date().toISOString(),issued=new Date(timestamp).toLocaleDateString();
+        const record={name,email,organization,id,timestamp};
+        event.participants=event.participants||[];event.participants.push(record);
+        if(!persist())return;
+        certificateClaim={...record,issued};
+        previewName=name;
+        await renderParticipant();
+        toast("Certificate generated. Download your copy below.","success");
+      };
+    };
+    const renderParticipant = async () => {
+      const event=current();
+      if(!event){
+        app.innerHTML='<div class="card locked-banner"><h2>Event not found</h2><p class="subtle">This participant link does not match an event saved in this browser.</p><p class="portal-note">Event data is stored locally in the organizer’s browser. For public access across devices, connect this portal to a shared server.</p></div>';return;
+      }
+      const complete=gateIsComplete(event);
+      app.innerHTML=`
+        <div class="participant-wrap">
+          <div class="eyebrow">Participant portal</div><h1>One last step to your certificate.</h1><div class="subtle">Share your feedback, then claim your personalized certificate of participation.</div>
+          <div class="steps"><div class="step done"><span class="step-number">✓</span><span>Event details</span></div><div id="step-2" class="step ${complete?"done":"active"}"><span class="step-number">${complete?"✓":"2"}</span><span>Survey verification</span></div><div id="step-3" class="step ${complete?"active":""}"><span class="step-number">3</span><span>Your certificate</span></div></div>
+          <div class="event-banner card"><div class="event-icon" style="background:${esc(event.accent||"#6658e8")}">✦</div><div><h2 data-live="name">${esc(event.name||"Untitled event")}</h2><p><span data-live="organizer">${esc(event.organizer||"Organizer")}</span> &nbsp;·&nbsp; ${esc(dateLabel(event.date))}</p></div></div>
+          <div class="participant-grid">
+            <div>
+              <section class="card gate-card">
+                <h2>01 &nbsp; Complete the post-event survey</h2><div class="subtle" style="margin-top:5px">Your feedback helps this event grow.</div>
+                <div id="gate-status" class="gate-state ${complete?"unlocked":""}"><div class="gate-state-icon">${complete?"✓":"⌑"}</div><div><strong>${complete?"Survey verification complete":"Certificate access is locked"}</strong><p>${complete?"Your certificate form is ready.":"Complete the survey verification steps below to unlock your certificate."}</p></div></div>
+                <div class="survey-actions">
+                  ${event.gate!=="code"?`<button class="btn btn-primary survey-open" id="open-survey">↗ &nbsp; Open post-event survey form</button><div class="timer-hint" id="timer-hint">${surveyOpened?remaining>0?`You can continue in ${remaining} seconds…`:"Timer complete — confirm your survey submission.":"Open the survey to start your verification."}</div><label class="confirm-row"><input id="survey-confirm" type="checkbox" ${surveyConfirmed?"checked":""} ${!surveyOpened||remaining>0?"disabled":""}><span>I have completed and submitted the survey.</span></label>`:""}
+                  ${event.gate!=="external"?`<div class="field"><label for="completion-code">Secret completion code</label><div class="code-form"><input id="completion-code" type="password" placeholder="Enter the code from the survey" autocomplete="off"><button id="verify-code" class="btn">Verify code</button></div></div>`:""}
+                </div>
+                <div class="lock-note">⌑ &nbsp; ${event.gate==="external"?"Survey link, timer, and confirmation required":event.gate==="code"?"A valid event completion code is required":"Survey, timer, confirmation, and code are required"}</div>
+              </section>
+              <div id="claim-area" class="card" style="margin-top:16px">${complete?certificateClaim?claimSuccess():claimForm():lockedForm()}</div>
+            </div>
+            <section class="card certificate-preview">
+              <div class="certificate-caption"><div><h3>Certificate preview</h3><div class="subtle" style="font-size:10px;margin-top:3px">Personalized after verification</div></div><span class="preview-chip">High resolution</span></div>
+              <canvas id="participant-preview" width="1000" height="688"></canvas>
+              ${certificateClaim?`<div class="verification">◈ &nbsp; Verification ID: <span class="id-pill">${esc(certificateClaim.id)}</span></div><div class="certificate-actions"><button class="btn btn-primary" id="download-png">↓&nbsp; Download PNG</button><button class="btn" id="download-pdf">↓&nbsp; Print-ready PDF</button></div>`:""}
+            </section>
+          </div>
+          <div class="portal-note">Your certificate is generated in this browser. Your event organizer stores participant logs on their device. &nbsp;·&nbsp; Keep your verification ID for reference.</div>
+        </div>`;
+      const canvas=document.getElementById("participant-preview");
+      if(certificateClaim)await paintParticipantPreview(canvas,event,certificateClaim.name,certificateClaim.id,certificateClaim.issued);
+      else drawCertificate(canvas,event,"Your name here","",new Date().toLocaleDateString(),false);
+      const open=document.getElementById("open-survey");
+      if(open)open.onclick=()=>openSurvey(false);
+      const confirm=document.getElementById("survey-confirm");
+      if(confirm)confirm.onchange=()=>{surveyConfirmed=confirm.checked;updateGateUI();};
+      const verify=document.getElementById("verify-code");
+      if(verify)verify.onclick=()=>{
+        const input=document.getElementById("completion-code");
+        if(!event.secret){toast("The organizer has not configured a completion code yet.","error");return;}
+        if(String(input.value).trim()===String(event.secret)){codeAccepted=true;toast("Completion code accepted.","success");updateGateUI();}
+        else{codeAccepted=false;toast("That code did not match. Please check and try again.","error");}
+      };
+      bindClaimForm();
+      const png=document.getElementById("download-png"),pdf=document.getElementById("download-pdf");
+      if(png)png.onclick=()=>downloadCertificate("png");
+      if(pdf)pdf.onclick=()=>downloadCertificate("pdf");
+      updateGateUI();
+    };
+    const paintParticipantPreview = async (canvas,event,name,id,issued) => {
+      const result=await getParticipantCanvas(event,name,id,issued);
+      canvas.width=1000;canvas.height=688;
+      const ctx=canvas.getContext("2d");
+      ctx.drawImage(result,0,0,canvas.width,canvas.height);
+    };
+    const claimSuccess=()=>`<div class="claim-card"><div class="gate-state unlocked" style="margin:0"><div class="gate-state-icon">✓</div><div><strong>Certificate ready</strong><p>Your personalized certificate is ready to download.</p></div></div></div>`;
+    const downloadCertificate = async format => {
+      const event=current(),claim=certificateClaim;
+      if(!event||!claim)return;
+      try{
+        const canvas=await getParticipantCanvas(event,claim.name,claim.id,claim.issued);
+        const filename=`${claim.name.trim().replace(/[^a-z0-9]+/gi,"-").replace(/^-|-$/g,"").toLowerCase()||"certificate"}-${claim.id}`;
+        if(format==="png"){
+          const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error("PNG export failed.")),"image/png"));
+          const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=filename+".png";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+        }else{
+          if(!window.jspdf?.jsPDF)throw new Error("The PDF library could not be loaded. Check your internet connection and try again.");
+          const orientation=canvas.width>=canvas.height?"landscape":"portrait";
+          const pdf=new window.jspdf.jsPDF({orientation,unit:"px",format:[canvas.width,canvas.height],hotfixes:["px_scaling"]});
+          pdf.addImage(canvas.toDataURL("image/png"),"PNG",0,0,canvas.width,canvas.height,undefined,"FAST");
+          pdf.save(filename+".pdf");
+        }
+        toast(`Certificate ${format.toUpperCase()} downloaded.`,"success");
+      }catch(err){console.error("Certificate download failed.",err);toast(err.message||"Certificate download failed.","error");}
+    };
+    const bindGlobal = () => {
+      const input=document.getElementById("template-file");
+      input.onchange=async e=>{
+        const file=e.target.files?.[0];if(!file)return;
+        if(!["image/png","image/jpeg","image/webp"].includes(file.type)){toast("Choose a PNG, JPEG, or WebP image.","error");input.value="";return;}
+        if(file.size>3*1024*1024){toast("Please choose an image smaller than 3 MB so it can be stored in this browser.","error");input.value="";return;}
+        const reader=new FileReader();
+        reader.onerror=()=>{console.error("Failed to read certificate image.");toast("Could not read the selected image.","error");};
+        reader.onload=()=>{
+          const image=new Image();
+          image.onerror=()=>toast("The selected file is not a valid image.","error");
+          image.onload=()=>{const event=current();if(!event)return;event.templateData=String(reader.result);persist();render();toast(`Certificate template uploaded (${image.naturalWidth} × ${image.naturalHeight}).`,"success");};
+          image.src=String(reader.result);
+        };
+        reader.readAsDataURL(file);
+      };
+    };
+    const render = () => {
+      document.documentElement.style.setProperty("--accent",current()?.accent||"#6658e8");
+      document.getElementById("portal-role").textContent=lockedParticipant?"Participant portal":"Organizer workspace";
+      document.getElementById("portal-avatar").textContent=lockedParticipant?"P":"O";
+      if(mode==="participant")renderParticipant();else renderStudio();
+      bindGlobal();
+    };
+    loadEvents();
+    render();
+  })();
+  </script>
+</body>
+</html>
